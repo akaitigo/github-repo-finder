@@ -230,23 +230,33 @@ async function safeJson(
 }
 
 /**
- * forbidden GatewayError の reason を body 解析で詳細化する。
+ * forbidden GatewayError の reason を「ヘッダ + body」で詳細化する。
  *
- * 処理:
- * 1. baseError が forbidden 以外なら何もせず返す
- * 2. response.clone() で body 2 度読みを回避（呼び出し元の後続読み取りを保護）
- * 3. body の message を {@link parseForbiddenReason} に渡して reason 判定
- * 4. body 解析失敗時は reason: 'unknown' にフォールバック
+ * 処理優先順位:
+ * 1. baseError が forbidden 以外 → そのまま返す（変換不要）
+ * 2. `X-GitHub-SSO` ヘッダ存在 → sso-required を即確定（公式ヘッダ優先、body 表記揺れに非依存）
+ * 3. body の message を {@link parseForbiddenReason} で判定（補助的な解析）
+ * 4. body 解析失敗 → reason: 'unknown' にフォールバック
  *
  * 設計判断:
+ * - **公式ヘッダ (X-GitHub-SSO) を最優先**: body 文言は localize / 仕様変更で揺れ得るが、ヘッダは API 契約
  * - parseRateLimitError と分離（同期 vs 非同期、責務の分離）
- * - response.clone() で破壊的操作を回避
+ * - response.clone() で body 2 度読み回避（呼び出し元の後続読み取りを保護）
+ *
+ * 参考: SAML SSO 強制時の 403 では `X-GitHub-SSO` ヘッダが返される
+ * https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on
  */
 async function enrichForbiddenReason(
   response: Response,
   baseError: GatewayError,
 ): Promise<GatewayError> {
   if (baseError.kind !== "forbidden") return baseError;
+
+  // 公式ヘッダで sso-required を即確定（body 表記揺れに非依存）
+  if (response.headers.get("x-github-sso") !== null) {
+    return { kind: "forbidden", reason: "sso-required" };
+  }
+
   const cloned = response.clone();
   const jsonResult = await safeJson(cloned);
   const reason = jsonResult.ok
@@ -285,6 +295,7 @@ export function parseForbiddenReason(
   if (
     lower.includes("saml enforcement") ||
     lower.includes("single sign-on") ||
+    lower.includes("single sign on") ||
     lower.includes("sso enforcement")
   ) {
     return "sso-required";

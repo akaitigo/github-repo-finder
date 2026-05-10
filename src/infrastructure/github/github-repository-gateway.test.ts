@@ -340,6 +340,47 @@ describe("GitHubRepositoryGateway.search — 403 / 429 三分類", () => {
     expect(result.error).toEqual({ kind: "forbidden", reason: "unknown" });
   });
 
+  it("403 + X-GitHub-SSO ヘッダ → forbidden{reason:'sso-required'} (公式ヘッダ最優先)", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        { message: "Must have admin rights to Repository." },
+        {
+          status: 403,
+          headers: {
+            "x-ratelimit-remaining": "5",
+            "x-github-sso": "required; url=https://github.com/orgs/example/sso",
+          },
+        },
+      ),
+    );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "sso-required",
+    });
+  });
+
+  it("403 + X-GitHub-SSO 空文字 → forbidden{reason:'sso-required'} (ヘッダ存在のみで判定)", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(forbidden403, {
+        status: 403,
+        headers: {
+          "x-ratelimit-remaining": "5",
+          "x-github-sso": "",
+        },
+      }),
+    );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "sso-required",
+    });
+  });
+
   it("429 + retry-after → secondary-rate-limited", async () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse(
@@ -529,6 +570,68 @@ describe("GitHubRepositoryGateway.findByOwnerAndRepo", () => {
     });
   });
 
+  it("403 + body{personal access token} → forbidden{reason:'invalid-token'}", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(forbidden403, {
+        status: 403,
+        headers: { "x-ratelimit-remaining": "5" },
+      }),
+    );
+    const result = await gateway.findByOwnerAndRepo("facebook", "react");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "invalid-token",
+    });
+  });
+
+  it("403 + body{SAML enforcement} → forbidden{reason:'sso-required'}", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        {
+          message: "Resource protected by organization SAML enforcement.",
+        },
+        { status: 403, headers: { "x-ratelimit-remaining": "5" } },
+      ),
+    );
+    const result = await gateway.findByOwnerAndRepo("facebook", "react");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "sso-required",
+    });
+  });
+
+  it("403 + body{admin rights} → forbidden{reason:'unknown'}", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        { message: "Must have admin rights to Repository." },
+        { status: 403, headers: { "x-ratelimit-remaining": "5" } },
+      ),
+    );
+    const result = await gateway.findByOwnerAndRepo("facebook", "react");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({ kind: "forbidden", reason: "unknown" });
+  });
+
+  it("403 + body 解析失敗 → forbidden{reason:'unknown'}", async () => {
+    const broken = new Response("not-a-json{", {
+      status: 403,
+      headers: {
+        "x-ratelimit-remaining": "5",
+        "Content-Type": "application/json",
+      },
+    });
+    fetchMock.mockResolvedValueOnce(broken);
+    const result = await gateway.findByOwnerAndRepo("facebook", "react");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({ kind: "forbidden", reason: "unknown" });
+  });
+
   it("500 → http-error{status:500}", async () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse(serverError500, { status: 500 }),
@@ -715,6 +818,14 @@ describe("parseForbiddenReason (helper)", () => {
     expect(
       parseForbiddenReason({
         message: "single sign-on configuration required",
+      }),
+    ).toBe("sso-required");
+  });
+
+  it("body: { message: 'single sign on' } (ハイフンなし) → sso-required", () => {
+    expect(
+      parseForbiddenReason({
+        message: "single sign on required for organization",
       }),
     ).toBe("sso-required");
   });
