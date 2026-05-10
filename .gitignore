@@ -38,6 +38,9 @@ test-results/
 .DS_Store
 Thumbs.db
 
+# Secrets (秘密鍵等)
+*.pem
+
 # Logs
 *.log
 npm-debug.log*
