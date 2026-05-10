@@ -111,12 +111,12 @@ describe("GitHubRepositoryGateway.search — URL / headers", () => {
     fetchMock.mockResolvedValueOnce(buildResponse(searchEmpty));
     const gateway = new GitHubRepositoryGateway({
       fetchImpl: fetchMock,
-      token: "ghp_test_token_xxxx",
+      token: "test-token-not-real-xxxx",
     });
     await gateway.search(unwrapQuery("react"));
     const init = fetchMock.mock.calls[0]?.[1];
     const headers = init?.headers as Record<string, string>;
-    expect(headers["Authorization"]).toBe("Bearer ghp_test_token_xxxx");
+    expect(headers["Authorization"]).toBe("Bearer test-token-not-real-xxxx");
   });
 
   it("空文字 token は付けない", async () => {
@@ -512,5 +512,79 @@ describe("parseRateLimitError (helper)", () => {
       kind: "secondary-rate-limited",
       retryAfterSec: 0,
     });
+  });
+
+  it("retry-after: 99999 → 3600 で clamp（防御的、UI表示時間の暴走防止）", () => {
+    const r = new Response("", {
+      status: 403,
+      headers: { "retry-after": "99999" },
+    });
+    expect(parseRateLimitError(r)).toEqual({
+      kind: "secondary-rate-limited",
+      retryAfterSec: 3600,
+    });
+  });
+
+  it("403 + remaining:0 だが reset ヘッダ欠落 → forbidden（フォールバック設計）", () => {
+    const r = new Response("", {
+      status: 403,
+      headers: { "x-ratelimit-remaining": "0" },
+    });
+    expect(parseRateLimitError(r)).toEqual({
+      kind: "forbidden",
+      reason: "unknown",
+    });
+  });
+
+  it("403 + remaining:0 だが reset:NaN → forbidden（フォールバック設計）", () => {
+    const r = new Response("", {
+      status: 403,
+      headers: {
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": "not-a-number",
+      },
+    });
+    expect(parseRateLimitError(r)).toEqual({
+      kind: "forbidden",
+      reason: "unknown",
+    });
+  });
+});
+
+describe("GitHubRepositoryGateway.search — defensive input clamp", () => {
+  let fetchMock: ReturnType<typeof vi.fn<FetchLike>>;
+  let gateway: GitHubRepositoryGateway;
+
+  beforeEach(() => {
+    fetchMock = vi.fn<FetchLike>();
+    gateway = new GitHubRepositoryGateway({ fetchImpl: fetchMock });
+  });
+
+  it("perPage: 999 → 100 で clamp（GitHub API 上限）", async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse(searchEmpty));
+    await gateway.search(unwrapQuery("react"), { perPage: 999 });
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("per_page=100");
+  });
+
+  it("perPage: 0 → 1 で clamp", async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse(searchEmpty));
+    await gateway.search(unwrapQuery("react"), { perPage: 0 });
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("per_page=1");
+  });
+
+  it("page: 0 → 1 で clamp", async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse(searchEmpty));
+    await gateway.search(unwrapQuery("react"), { page: 0 });
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("page=1");
+  });
+
+  it("perPage: 30.7 → 30 に truncate", async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse(searchEmpty));
+    await gateway.search(unwrapQuery("react"), { perPage: 30.7 });
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("per_page=30");
   });
 });

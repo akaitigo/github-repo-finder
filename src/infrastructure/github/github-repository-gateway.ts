@@ -37,10 +37,11 @@ export interface GitHubRepositoryGatewayDeps {
  * - 標準 `fetch` を使用（@octokit/rest 不採用、依存削減 + Next.js キャッシュ統合）
  * - REST `/search/repositories` を使用（GraphQL 不要）
  * - 自動リトライしない（rate limit 時はユーザー操作 `<Link>` Retry に委ねる）
- * - 403/429 を 3 分類:
- *   - retry-after あり → secondary-rate-limited
- *   - x-ratelimit-remaining: 0 → rate-limited
- *   - 上記以外（remaining > 0） → forbidden
+ * - 403/429 を 3 分類（{@link parseRateLimitError} 参照、フォールバック挙動も明記）:
+ *   - retry-after あり → secondary-rate-limited（retryAfterSec は 1 時間で clamp）
+ *   - x-ratelimit-remaining: 0 かつ reset ヘッダあり → rate-limited
+ *   - 上記以外（remaining > 0 / reset 欠落 / NaN） → forbidden
+ * - per_page / page は防御的に clamp（per_page: 1〜100、page: 1〜）
  * - zod でレスポンス検証 → schema drift を検知
  */
 export class GitHubRepositoryGateway implements RepositoryGateway {
@@ -56,10 +57,17 @@ export class GitHubRepositoryGateway implements RepositoryGateway {
     query: SearchQuery,
     options?: SearchOptions,
   ): Promise<ResultType<SearchResult, GatewayError>> {
+    // 防御: GitHub Search API の per_page 上限 100、page 下限 1 を defensive clamp
+    // 上位層の入力検証に依存せず、不正値をここで吸収する（Issue #6 設計判断）
+    const perPage = Math.min(
+      100,
+      Math.max(1, Math.trunc(options?.perPage ?? 30)),
+    );
+    const page = Math.max(1, Math.trunc(options?.page ?? 1));
     const params = new URLSearchParams({
       q: query.value,
-      per_page: String(options?.perPage ?? 30),
-      page: String(options?.page ?? 1),
+      per_page: String(perPage),
+      page: String(page),
     });
     const url = `${GITHUB_API_BASE}/search/repositories?${params.toString()}`;
 
@@ -148,13 +156,25 @@ export class GitHubRepositoryGateway implements RepositoryGateway {
   }
 }
 
+const RETRY_AFTER_MAX_SEC = 3600;
+
 /**
  * 403/429 を 3 分類して GatewayError に変換するヘルパ。
  *
  * 判定優先順位:
  * 1. retry-after ヘッダあり → secondary-rate-limited（公式が abuse detection で必ず返す）
- * 2. x-ratelimit-remaining: 0 → rate-limited（primary、resetAt 表示用）
- * 3. それ以外（remaining > 0 で 403/429）→ forbidden（待っても直らない、ユーザー操作要）
+ * 2. x-ratelimit-remaining: 0 かつ x-ratelimit-reset あり → rate-limited（primary、resetAt 表示用）
+ * 3. 上記以外 → forbidden（待っても直らない、ユーザー操作要）
+ *
+ * フォールバック挙動:
+ * - retry-after が非数値 → 次の優先度（remaining 判定）に進む
+ * - remaining: 0 だが reset ヘッダ欠落 → forbidden にフォールバック
+ *   （UI で「待ち時間」を出せないため待機誘導しない、操作誘導に倒す）
+ * - remaining > 0 / NaN → forbidden（invalid-token / SSO の可能性が高い）
+ *
+ * 防御的処理:
+ * - retry-after の値は 1 時間 ({@link RETRY_AFTER_MAX_SEC} 秒) で clamp
+ *   （GitHub が異常値を返した場合に UI の表示時間が暴走しない）
  *
  * 公式 docs: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
  */
@@ -165,7 +185,10 @@ export function parseRateLimitError(response: Response): GatewayError | null {
   if (retryAfterRaw !== null) {
     const retryAfterSec = Number.parseInt(retryAfterRaw, 10);
     if (Number.isFinite(retryAfterSec) && retryAfterSec >= 0) {
-      return { kind: "secondary-rate-limited", retryAfterSec };
+      return {
+        kind: "secondary-rate-limited",
+        retryAfterSec: Math.min(retryAfterSec, RETRY_AFTER_MAX_SEC),
+      };
     }
   }
 
