@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   GitHubRepositoryGateway,
   parseRateLimitError,
+  parseForbiddenReason,
   type FetchLike,
 } from "./github-repository-gateway";
 import { SearchQuery } from "@/domain/search/search-query";
@@ -247,7 +248,7 @@ describe("GitHubRepositoryGateway.search — 403 / 429 三分類", () => {
     });
   });
 
-  it("403 + remaining:'5' (>0) → forbidden{reason:'unknown'}", async () => {
+  it("403 + remaining:'5' (>0) + body{personal access token} → forbidden{reason:'invalid-token'}", async () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse(forbidden403, {
         status: 403,
@@ -257,13 +258,82 @@ describe("GitHubRepositoryGateway.search — 403 / 429 三分類", () => {
     const result = await gateway.search(unwrapQuery("react"));
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.error).toEqual({ kind: "forbidden", reason: "unknown" });
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "invalid-token",
+    });
   });
 
-  it("403 ヘッダ無し → forbidden（remaining 不明）", async () => {
+  it("403 ヘッダ無し + body{personal access token} → forbidden{reason:'invalid-token'}", async () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse(forbidden403, { status: 403 }),
     );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "invalid-token",
+    });
+  });
+
+  it("403 + body{Bad credentials} → forbidden{reason:'invalid-token'}", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        { message: "Bad credentials" },
+        { status: 403, headers: { "x-ratelimit-remaining": "5" } },
+      ),
+    );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "invalid-token",
+    });
+  });
+
+  it("403 + body{SAML enforcement} → forbidden{reason:'sso-required'}", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        {
+          message:
+            "Resource protected by organization SAML enforcement. You must grant your OAuth token access to this organization.",
+        },
+        { status: 403, headers: { "x-ratelimit-remaining": "5" } },
+      ),
+    );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({
+      kind: "forbidden",
+      reason: "sso-required",
+    });
+  });
+
+  it("403 + body{admin rights} → forbidden{reason:'unknown'} (scope 不足)", async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse(
+        { message: "Must have admin rights to Repository." },
+        { status: 403, headers: { "x-ratelimit-remaining": "5" } },
+      ),
+    );
+    const result = await gateway.search(unwrapQuery("react"));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toEqual({ kind: "forbidden", reason: "unknown" });
+  });
+
+  it("403 + body 解析失敗 → forbidden{reason:'unknown'} (フォールバック)", async () => {
+    const broken = new Response("not-a-json{", {
+      status: 403,
+      headers: {
+        "x-ratelimit-remaining": "5",
+        "Content-Type": "application/json",
+      },
+    });
+    fetchMock.mockResolvedValueOnce(broken);
     const result = await gateway.search(unwrapQuery("react"));
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -586,5 +656,86 @@ describe("GitHubRepositoryGateway.search — defensive input clamp", () => {
     await gateway.search(unwrapQuery("react"), { perPage: 30.7 });
     const url = String(fetchMock.mock.calls[0]?.[0]);
     expect(url).toContain("per_page=30");
+  });
+});
+
+describe("parseForbiddenReason (helper)", () => {
+  it("body: null → unknown", () => {
+    expect(parseForbiddenReason(null)).toBe("unknown");
+  });
+
+  it("body: undefined → unknown", () => {
+    expect(parseForbiddenReason(undefined)).toBe("unknown");
+  });
+
+  it("body: 文字列 → unknown", () => {
+    expect(parseForbiddenReason("plain text")).toBe("unknown");
+  });
+
+  it("body: { message: 数値 } → unknown", () => {
+    expect(parseForbiddenReason({ message: 123 })).toBe("unknown");
+  });
+
+  it("body: { message: 'Bad credentials' } → invalid-token", () => {
+    expect(parseForbiddenReason({ message: "Bad credentials" })).toBe(
+      "invalid-token",
+    );
+  });
+
+  it("body: { message: 'Token expired' } → invalid-token", () => {
+    expect(parseForbiddenReason({ message: "Token expired" })).toBe(
+      "invalid-token",
+    );
+  });
+
+  it("body: { message: 'Resource not accessible by personal access token' } → invalid-token", () => {
+    expect(
+      parseForbiddenReason({
+        message: "Resource not accessible by personal access token.",
+      }),
+    ).toBe("invalid-token");
+  });
+
+  it("body: { message: 'Requires authentication' } → invalid-token", () => {
+    expect(parseForbiddenReason({ message: "Requires authentication" })).toBe(
+      "invalid-token",
+    );
+  });
+
+  it("body: { message: 'SAML enforcement' } → sso-required", () => {
+    expect(
+      parseForbiddenReason({
+        message:
+          "Resource protected by organization SAML enforcement. Grant access.",
+      }),
+    ).toBe("sso-required");
+  });
+
+  it("body: { message: 'single sign-on' } → sso-required", () => {
+    expect(
+      parseForbiddenReason({
+        message: "single sign-on configuration required",
+      }),
+    ).toBe("sso-required");
+  });
+
+  it("body: { message: 'SSO enforcement' } → sso-required", () => {
+    expect(
+      parseForbiddenReason({ message: "SSO enforcement is enabled" }),
+    ).toBe("sso-required");
+  });
+
+  it("body: { message: 'Must have admin rights' } → unknown (scope 不足)", () => {
+    expect(
+      parseForbiddenReason({
+        message: "Must have admin rights to Repository.",
+      }),
+    ).toBe("unknown");
+  });
+
+  it("大文字小文字を無視（'BAD CREDENTIALS' → invalid-token）", () => {
+    expect(parseForbiddenReason({ message: "BAD CREDENTIALS" })).toBe(
+      "invalid-token",
+    );
   });
 });

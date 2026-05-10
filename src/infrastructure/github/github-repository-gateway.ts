@@ -77,7 +77,9 @@ export class GitHubRepositoryGateway implements RepositoryGateway {
     const response = fetchResult.value;
 
     const rateLimitErr = parseRateLimitError(response);
-    if (rateLimitErr !== null) return Result.err(rateLimitErr);
+    if (rateLimitErr !== null) {
+      return Result.err(await enrichForbiddenReason(response, rateLimitErr));
+    }
 
     if (!response.ok) {
       return Result.err({ kind: "http-error", status: response.status });
@@ -110,7 +112,9 @@ export class GitHubRepositoryGateway implements RepositoryGateway {
     const response = fetchResult.value;
 
     const rateLimitErr = parseRateLimitError(response);
-    if (rateLimitErr !== null) return Result.err(rateLimitErr);
+    if (rateLimitErr !== null) {
+      return Result.err(await enrichForbiddenReason(response, rateLimitErr));
+    }
 
     if (response.status === 404) {
       return Result.err({ kind: "not-found" });
@@ -223,4 +227,78 @@ async function safeJson(
   } catch {
     return Result.err({ kind: "malformed-response", cause: "json-parse" });
   }
+}
+
+/**
+ * forbidden GatewayError の reason を body 解析で詳細化する。
+ *
+ * 処理:
+ * 1. baseError が forbidden 以外なら何もせず返す
+ * 2. response.clone() で body 2 度読みを回避（呼び出し元の後続読み取りを保護）
+ * 3. body の message を {@link parseForbiddenReason} に渡して reason 判定
+ * 4. body 解析失敗時は reason: 'unknown' にフォールバック
+ *
+ * 設計判断:
+ * - parseRateLimitError と分離（同期 vs 非同期、責務の分離）
+ * - response.clone() で破壊的操作を回避
+ */
+async function enrichForbiddenReason(
+  response: Response,
+  baseError: GatewayError,
+): Promise<GatewayError> {
+  if (baseError.kind !== "forbidden") return baseError;
+  const cloned = response.clone();
+  const jsonResult = await safeJson(cloned);
+  const reason = jsonResult.ok
+    ? parseForbiddenReason(jsonResult.value)
+    : "unknown";
+  return { kind: "forbidden", reason };
+}
+
+/**
+ * 403 レスポンス body の message から forbidden の reason を判定。
+ *
+ * 判定優先順位:
+ * 1. SAML / SSO / single sign-on 関連 → sso-required（org SSO enforcement）
+ * 2. Bad credentials / token expired / invalid token / personal access token / requires authentication → invalid-token
+ * 3. それ以外 → unknown（scope 不足、admin 権限不足等）
+ *
+ * 参考: GitHub API の 403 message 例
+ * - "Resource not accessible by personal access token." → invalid-token
+ * - "Bad credentials" → invalid-token
+ * - "Resource protected by organization SAML enforcement..." → sso-required
+ * - "Must have admin rights to Repository." → unknown
+ *
+ * 設計判断:
+ * - 大文字小文字を無視するため lower で比較
+ * - body が { message: string } 形でない場合は unknown
+ */
+export function parseForbiddenReason(
+  body: unknown,
+): "invalid-token" | "sso-required" | "unknown" {
+  if (typeof body !== "object" || body === null) return "unknown";
+  const message = (body as Record<string, unknown>).message;
+  if (typeof message !== "string") return "unknown";
+
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("saml enforcement") ||
+    lower.includes("single sign-on") ||
+    lower.includes("sso enforcement")
+  ) {
+    return "sso-required";
+  }
+
+  if (
+    lower.includes("bad credentials") ||
+    lower.includes("token expired") ||
+    lower.includes("invalid token") ||
+    lower.includes("personal access token") ||
+    lower.includes("requires authentication")
+  ) {
+    return "invalid-token";
+  }
+
+  return "unknown";
 }
