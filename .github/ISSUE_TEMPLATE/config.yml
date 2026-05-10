@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 設計プラン
+    url: https://github.com/akaitigo/github-repo-finder/blob/main/docs/plan.md
+    about: 全体設計は docs/plan.md を参照
+  - name: 公式ドキュメント抜粋
+    url: https://github.com/akaitigo/github-repo-finder/tree/main/docs/reference
+    about: Next.js v16 / GitHub API / Tailwind v4 等の公式抜粋
