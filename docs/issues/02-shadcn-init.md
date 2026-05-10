@@ -1,6 +1,6 @@
 # Issue #2: shadcn/ui 初期化
 
-> **設計意図**: コードを所有する設計の UIライブラリを採用、Tailwind v4 + Radix UI 内部利用で a11y 担保。後続 #8 (UI) で必要な component を都度 add できる土台。
+> **設計意図**: コードを所有する設計の UIライブラリを採用、Tailwind v4 + Base UI（shadcn 最新の base-nova preset、旧 Radix UI の後継）内部利用で a11y 担保。後続 #8 (UI) で必要な component を都度 add できる土台。
 
 ## 目的
 shadcn/ui CLI で初期化し、後続のUIコンポーネント（button/input/card/skeleton/alert）を `add` できる状態にする。コードを所有する設計でカスタマイズ自由 + a11y 担保（Radix UI 内部利用）。
