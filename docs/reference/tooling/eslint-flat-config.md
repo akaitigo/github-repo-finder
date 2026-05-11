@@ -7,7 +7,6 @@
 ## 今回の用途
 - レイヤー間の依存方向を `no-restricted-imports` で機械強制
 - `dangerouslySetInnerHTML` 禁止
-- plan.md セクション 1-2 (依存方向ルール)、Issue #1 (初期化)
 
 ## flat config とは
 

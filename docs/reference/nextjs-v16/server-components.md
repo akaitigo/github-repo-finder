@@ -7,7 +7,6 @@
 ## 今回の用途
 - `app/page.tsx` を Server Component として実装、`<SearchForm />` のみ Client
 - `<RepositoryList />`, `<RepositoryCard />`, `<RepositoryDetail />` を Server Component
-- plan.md セクション 1-2-2 (Server/Client境界決定表)
 
 ## 基本原則
 

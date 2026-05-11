@@ -6,7 +6,6 @@
 
 ## 今回の用途
 - Search API rate limit + UX設計
-- plan.md セクション 4-1, 1-3 (GatewayError), 1-4 (UIマッピング)
 
 ## 重要事実: 複数バケットあり、Search は別
 
@@ -18,7 +17,7 @@
 | graphql | — | 5,000 points | per hour |
 | Git LFS | 300 | 3,000 | req/min |
 
-🔴 **plan.md で「60/5000/h」と書いていたのは core bucket の値で、Search API には不正確**
+🔴 **「60/5000/h」は core bucket の値、Search API には不正確（混同しないこと）**
 
 GitHub Enterprise Cloud は core 15,000/hour に拡張。
 

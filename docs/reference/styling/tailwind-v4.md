@@ -7,7 +7,6 @@
 
 ## 今回の用途
 - Next.js v16 + shadcn/ui + Tailwind v4 の組み合わせ
-- plan.md セクション 4 (技術スタック)、9 (開発環境)
 
 ## v3 vs v4 の主な違い
 
@@ -121,7 +120,7 @@ v4 では `@theme` で設定、または `@variant` ディレクティブ:
 - v4 はスキャンベースで自動的に未使用クラスを除外
 - v3 の `content` 設定は不要
 
-## クイックスタート（plan.md にも反映）
+## クイックスタート
 
 ```bash
 # 1. Next.js v16 + TS + Tailwind v4 (defaultで含まれる)

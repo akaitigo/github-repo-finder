@@ -7,7 +7,6 @@
 
 ## 今回の用途
 - `?q=react` 等の検索結果をどう扱うか（cache する/しない）
-- plan.md 「今後の拡張案」での言及
 
 ## v15+ デフォルトの大変更
 
@@ -131,7 +130,7 @@ export default function Page() {
 
 → 今回の `app/page.tsx` は `searchParams` 使用 → 自動的に dynamic、Cache Components 不要
 
-## 今回の判断（plan.md 採用）
+## 今回の判断
 
 - **Cache Components は採用しない** — `searchParams` 使用で必然的に dynamic、`'use cache'` の追加メリット薄い
 - **`fetch` のデフォルト `cache: 'no-store'` に依存** — 検索結果は常に最新が望ましい

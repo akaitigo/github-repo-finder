@@ -34,12 +34,9 @@
 
 ## 使い方
 
-### 実装時（AI への指示）
+### 実装時の参照
 
-```
-@docs/reference/nextjs-v16/searchparams.md と @docs/plan.md を読んで、
-app/page.tsx を実装してください。PageProps ヘルパーと normalizeSearchParam を使って。
-```
+各 reference は対応する Issue の実装で参照する。例: `app/page.tsx` 実装時は `nextjs-v16/searchparams.md`、infra 実装時は `github-api/*.md`。
 
 ### コード参照
 
@@ -52,10 +49,6 @@ app/page.tsx を実装してください。PageProps ヘルパーと normalizeSe
 | **A** | searchparams, server-components, error-handling, rate-limits, error-responses, msw-v2-node, tailwind-v4 | 実装で必ず参照 |
 | **B** | search-repositories, vitest, playwright, eslint-flat-config, caching | 設計で参照 |
 | **C** (未作成) | shadcn-ui, zod, typescript-strict, pnpm, conventional-commits, adr-template | あると便利、必要時追加 |
-
-## 関連ドキュメント
-
-- [`../plan.md`](../plan.md) — 設計プラン（各 reference へのリンク含む）
 
 ## メンテナンス
 

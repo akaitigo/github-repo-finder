@@ -7,7 +7,6 @@
 ## 今回の用途
 - `app/page.tsx` で `?q=react` を受け取り Server Component 内で fetch
 - `app/repositories/[owner]/[repo]/page.tsx` で `params.owner` / `params.repo` を取得
-- plan.md セクション 1-2-1 (Composition Root)、2-2 (テストケース)
 
 ## 必要なAPI
 
