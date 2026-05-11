@@ -37,12 +37,37 @@ export default defineConfig({
         // 型定義のみのファイル
         "src/**/*.d.ts",
       ],
-      // 全体目標。後続 PR で per-layer 設定を追加（domain 90/app 80/infra 75/presentation 60）
+      // 全体目標 + per-layer 閾値（domain 90 / application 80 / infrastructure 75 / presentation 60）
+      // 該当ファイル未存在の glob は vitest が自動でスキップする
       thresholds: {
         lines: 75,
         functions: 75,
         branches: 75,
         statements: 75,
+        "src/domain/**/*.ts": {
+          lines: 90,
+          functions: 90,
+          branches: 90,
+          statements: 90,
+        },
+        "src/application/**/*.ts": {
+          lines: 80,
+          functions: 80,
+          branches: 80,
+          statements: 80,
+        },
+        "src/infrastructure/**/*.ts": {
+          lines: 75,
+          functions: 75,
+          branches: 75,
+          statements: 75,
+        },
+        "src/presentation/**/*.{ts,tsx}": {
+          lines: 60,
+          functions: 60,
+          branches: 60,
+          statements: 60,
+        },
       },
     },
     // Vitest projects: unit (node) / integration (jsdom) を分離

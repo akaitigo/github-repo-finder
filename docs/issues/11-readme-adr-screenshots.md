@@ -11,13 +11,13 @@ README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レ
 - [ ] 構成順:
   1. タイトル + Badges (CI status / Node v22 / License: MIT)
   2. **Vercel デプロイURL**（最上部、`https://github-repo-finder-xxx.vercel.app`）
-  3. **3行サマリー**: Backend エンジニア / Next.js初挑戦 / レイヤード4層
+  3. **3行サマリー**: プロダクト概要 / 構成要素 / 採用技術スタック
   4. PCスクショ（ヒーロー）
   5. **Requirements** (Node v22, pnpm v9, Tailwind v4)
   6. プロダクト概要（できること、3-5行）
   7. クイックスタート (短縮版1行 + 詳細版5ステップ折りたたみ)
   8. **設計判断3行サマリ**
-  9. **「Backend から見た Next.js」3行表**（比喩 → 実コード参照 → ユーザー価値）
+  9. **設計判断の根拠表**（採用パターン → 実コード参照 → 保守上の価値）
   10. **「制約と判断」表**（やったこと / 意図的にやらなかったこと(理由) / 時間があれば(1)(2)(3)）
   11. アーキテクチャ Mermaid 図（4層 + Composition Root + 依存方向）
   12. テスト戦略（カバレッジ現状値、`vitest.config.ts` projects 構成）
@@ -31,9 +31,8 @@ README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レ
       - データ層: ISR キャッシュ / 実APIスモークテスト
       - UX: Server Actions / Suspense streaming / Parallel Routes / ダークモード / PPR
   16. License (MIT) / Author / Acknowledgments
-  17. サポート連絡先（誠意の証拠）
-  18. **PR タイトル規約**: `feat: #N <短文>`
-  19. **ブランチ命名規則**: `feat/<番号>-<短名>`
+  17. **PR タイトル規約**: `feat: #N <短文>`
+  18. **ブランチ命名規則**: `feat/<番号>-<短名>`
 
 ### ADR 3本（`docs/adr/`）
 - [ ] `0001-layered-architecture.md`:
@@ -64,7 +63,7 @@ README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レ
 - Vercel デプロイ作業（→ #10 で完了済、URL を README に貼るだけ）
 
 ### 明示却下事項（積極的にやらない）
-- **Contributing.md / Code of Conduct**: 個人プロジェクトのため過剰、ノイズ
+- **Contributing.md / Code of Conduct**: 本プロジェクトのスコープ外、ノイズ
 - **Issue / PR テンプレートの `.github/` 再配置**: Issue #1 完了条件に含めて初回 commit 時に配置済、ここでは触らない
 - **i18n（多言語）**: 評価対象外、「今後の拡張案」止まり
 - **decisions/ ディレクトリの ADR-0004 (AI協働証跡)**: 過剰、AI活用レポートで十分
@@ -91,17 +90,17 @@ README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レ
 ```markdown
 # github-repo-finder
 
-> Backend Engineer が Next.js v16 初挑戦で実装した GitHub リポジトリ検索アプリ。
-> 軽量レイヤード4層 + Composition Root 採用、infrastructure 層 14異常系テストで Backend経験を活かした境界設計を可視化。
+> GitHub リポジトリ検索 Web アプリケーション（Next.js v16 + App Router）。
+> 軽量レイヤード4層 + Composition Root を採用、infrastructure 層に14異常系テストで外部 API 境界の堅牢性を担保。
 > **Vercel: https://github-repo-finder-xxx.vercel.app**
 ```
-**理由**: 読者 が最初に見る冒頭で「誰が・何を・どう作ったか」を 5秒で伝える。これが README の魂。
+**理由**: 冒頭で「何を・どう作ったか・どこで動くか」を 5 秒で伝える。
 
 ### 設計判断
 - 冒頭3画面の情報密度を重視→ 情報密度を最優先
-- 「Backend から見た Next.js」3行は ADR と整合させる（コードへのファイルパス参照込み）
+- 設計判断の根拠表は ADR と整合させる（コードへのファイルパス参照込み）
 - AI活用レポートの「却下した1件」は **token漏洩 / deep link喪失 / SSR初期表示劣化** の3軸で却下理由を明記
-- 学習過程セクションは「v15+ Promise化を一次情報（公式 RFC）で確認 → 設計を書き直し」で自走力に着地
+- 学習過程セクションは「v15+ Promise化を一次情報（公式 RFC）で確認 → 設計を書き直し」で経緯を記録
 - ADR の「Alternatives considered」「Why not now」は 50字ずつでも良い、「考えた → 選ばなかった」の証拠
 
 ## CI 担保範囲（Issue 完了時点）

@@ -1,9 +1,9 @@
 # Issue #6: infrastructure (GitHub APIクライアント) + 14異常系テスト
 
-> **設計意図**: **Backend Engineer の構成要素を最も色濃く出す層**。GitHub Search API の rate-limit 3分類（rate/secondary/forbidden）、5xx 系、JSON破損、schema drift、URLエンコードなど14種類の異常系を網羅し、「外部API境界の堅牢性」を可視化。
+> **設計意図**: 外部 API 境界の堅牢性を網羅する層。GitHub Search API の rate-limit 3分類（rate/secondary/forbidden）、5xx 系、JSON破損、schema drift、URLエンコードなど14種類の異常系をテストで保証。
 
 ## 目的
-GitHub Search API へのアクセス実装。`RepositoryGateway` interface を実装、zod でレスポンス検証、14種類の異常系（rate-limit 3分類、HTTP 4xx/5xx、JSON破損、schema drift、null フィールド、URLエンコード）を網羅的にテストし、**Backend Engineer の構成要素**を可視化。
+GitHub Search API へのアクセス実装。`RepositoryGateway` interface を実装、zod でレスポンス検証、14種類の異常系（rate-limit 3分類、HTTP 4xx/5xx、JSON破損、schema drift、null フィールド、URLエンコード）を網羅的にテスト。
 
 ## 完了条件
 - [ ] `src/infrastructure/github/github-api-types.ts` — zod スキーマ（`SearchResponseSchema`, `RepositoryResponseSchema`）

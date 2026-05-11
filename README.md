@@ -6,8 +6,7 @@ GitHub のリポジトリを検索する Web アプリケーション（Next.js 
 
 ## ディレクトリ
 
-- [`docs/plan.md`](docs/plan.md) — 設計プラン
-- [`docs/issues/`](docs/issues/README.md) — 11 Issue の依存図・ラベル定義・PR 規約
+- [`docs/issues/`](docs/issues/README.md) — Issue 雛形・依存図・PR 規約
 - [`docs/reference/`](docs/reference/README.md) — 公式ドキュメント抜粋集（Next.js v16 / GitHub API ほか）
 
 ## License
