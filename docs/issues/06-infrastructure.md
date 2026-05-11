@@ -100,4 +100,4 @@ export const SearchResponseSchema = z.object({
 - **null フィールド処理**（description/language）が壊れたら CI で落ちる
 - infra カバレッジ 75% 以上必須
 
-→ 外部 API 境界の堅牢性が機械保証、Backend特徴の核完成
+→ 外部 API 境界の堅牢性が機械保証される

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LoadingState } from "@/presentation/components/loading-state";
 import { createDetailUseCase } from "@/app/_lib/container";
 import { renderDetail } from "@/app/_lib/render-detail";
+import { normalizeSearchParam } from "@/app/_lib/normalize-search-params";
 
 /**
  * リポジトリ詳細ページ。
@@ -12,23 +13,26 @@ import { renderDetail } from "@/app/_lib/render-detail";
  * - Next.js v16 の `PageProps<'/repositories/[owner]/[repo]'>` ヘルパー使用
  * - params も await（v15+ async）
  * - notFound() は render-detail 内で呼ぶ
- * - 戻るリンク 1 つで一覧画面へ
+ * - **URL 同期**: searchParams.q を引き継いで「検索に戻る」「Retry」リンクで元クエリ復元
  */
 export default async function RepositoryDetailPage({
   params,
+  searchParams,
 }: PageProps<"/repositories/[owner]/[repo]">) {
-  const { owner, repo } = await params;
+  const [{ owner, repo }, sp] = await Promise.all([params, searchParams]);
+  const q = normalizeSearchParam(sp.q) ?? "";
+  const backHref = q.length > 0 ? `/?q=${encodeURIComponent(q)}` : "/";
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
       <Link
-        href="/"
+        href={backHref}
         className="text-sm underline focus-visible:outline focus-visible:outline-2"
       >
         ← 検索に戻る
       </Link>
       <Suspense fallback={<LoadingState />}>
-        {await renderRepositoryDetail(owner, repo)}
+        {await renderRepositoryDetail(owner, repo, q)}
       </Suspense>
     </div>
   );
@@ -37,8 +41,9 @@ export default async function RepositoryDetailPage({
 async function renderRepositoryDetail(
   owner: string,
   repo: string,
+  fallbackQ: string,
 ): Promise<React.ReactElement> {
   const useCase = createDetailUseCase();
   const result = await useCase.execute(owner, repo);
-  return renderDetail({ result });
+  return renderDetail({ result, fallbackQ });
 }

@@ -34,7 +34,8 @@ export function renderDetail({
   const error = result.error;
   switch (error.kind) {
     case "not-found":
-      notFound();
+      // notFound() は never を返すが、可読性のため明示的に return する
+      return notFound();
     case "rate-limit":
       return <RateLimitDisplay resetAt={error.resetAt} q={fallbackQ} />;
     case "forbidden":

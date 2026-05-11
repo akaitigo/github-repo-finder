@@ -92,7 +92,7 @@ switch (error.kind) {
 ### `fp-ts` の `Either<L, R>` モナド
 
 却下理由:
-- 学習コスト > メリット (チーム前提なし、本人にとって fp-ts 経験浅い)
+- 学習コスト > メリット (本プロジェクトでは fp-ts 採用の運用前提なし)
 - chain / map / fold のメソッド呼び出しが TypeScript 標準より verbose
 - bundle size 増加 (~30KB)
 - TypeScript の型推論との相性が `Result<T, E>` 自前実装より複雑

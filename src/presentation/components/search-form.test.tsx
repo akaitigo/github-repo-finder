@@ -61,6 +61,22 @@ describe("SearchForm", () => {
     );
   });
 
+  it("URL 同期: key prop で再マウントすると initialQuery が反映される", () => {
+    // page.tsx 側で <SearchForm key={q} initialQuery={q} /> として運用するため、
+    // key が変わると React がコンポーネントを再マウントし、useState が再初期化される。
+    // この test では key 変更による再マウントを再現。
+    const { rerender } = render(
+      <SearchForm key="react" initialQuery="react" />,
+    );
+    expect(screen.getByRole("searchbox")).toHaveValue("react");
+
+    rerender(<SearchForm key="vue" initialQuery="vue" />);
+    expect(screen.getByRole("searchbox")).toHaveValue("vue");
+
+    rerender(<SearchForm key="" initialQuery="" />);
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+  });
+
   it("a11y: 違反 0", async () => {
     const { container } = render(<SearchForm initialQuery="react" />);
     const results = await axe(container);

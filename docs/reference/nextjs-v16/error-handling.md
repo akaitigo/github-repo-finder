@@ -5,10 +5,9 @@
 - バージョン: Next.js v16.2.6
 
 ## 今回の用途
-- `app/error.tsx` (Client、reset/unstable_retry)
+- `app/error.tsx` (Client、reset を採用)
 - `app/not-found.tsx` (Server、404画面)
 - `app/loading.tsx` (Server、Suspense fallback)
-- 設計プラン セクション 1-1, 1-2-2, 1-4 (UIマッピング表)
 
 ## error.tsx
 
@@ -16,16 +15,24 @@
 - **`'use client'` ディレクティブ必須**（Error boundary は Client Component）
 - export default の関数を定義
 
-### Props（v16.2.0+）
+### Props
 
 ```typescript
 type Props = {
   error: Error & { digest?: string };
-  unstable_retry: () => void; // ★v16.2.0 追加、reset の後継
+  reset: () => void;
 };
 ```
 
-### 公式コード例（v16.2+ 推奨パターン）
+### 本プロジェクトの実装方針
+
+`src/app/error.tsx` は **`reset()` を採用**。理由:
+
+- **`reset()`** は安定 API、「error state をクリアして再 render」を行う
+- **`unstable_retry()`** (v16.2.0+ で追加された prefix `unstable_` 付き API) は「再 fetch + 再 render」を試みる新しい選択肢だが、API が `unstable_` 名前空間で互換性保証なし
+- 本プロジェクトでは安定 API である `reset()` を採用、`unstable_retry()` は将来の選択肢
+
+### 公式コード例 (本プロジェクトで採用するパターン)
 
 ```typescript
 'use client'; // Error boundaries must be Client Components
@@ -34,30 +41,24 @@ import { useEffect } from 'react';
 
 export default function Error({
   error,
-  unstable_retry,
+  reset,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    // error.digest は server-side log と照合可能、UI には出さない (情報漏洩防止)
+    console.error('[ErrorBoundary]', error.digest, error.message);
   }, [error]);
 
   return (
     <div role="alert">
       <h2>Something went wrong!</h2>
-      <button onClick={() => unstable_retry()}>Try again</button>
+      <button onClick={() => reset()}>Try again</button>
     </div>
   );
 }
 ```
-
-### `unstable_retry()` vs `reset()` の使い分け
-
-- **`unstable_retry()`**（v16.2.0+ 推奨）: 「再fetch + 再render」を試みる。一時的エラーから回復するため
-- **`reset()`**（旧API、まだ使える）: 「error stateをクリアして再render」のみ、再fetchしない
-- 公式: 「In most cases, you should use unstable_retry() instead」
 
 ### error.digest
 
@@ -84,12 +85,12 @@ error.tsx
 ```typescript
 'use client';
 
-export default function GlobalError({ error, unstable_retry }) {
+export default function GlobalError({ error, reset }) {
   return (
     <html>
       <body>
         <h2>Something went wrong!</h2>
-        <button onClick={() => unstable_retry()}>Try again</button>
+        <button onClick={() => reset()}>Try again</button>
       </body>
     </html>
   );
