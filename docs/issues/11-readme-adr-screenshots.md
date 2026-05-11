@@ -3,7 +3,7 @@
 > **設計意図**: 主要な構成要素である README と ADR を完成させる文書 PR。読者が最初に見る順序（Vercel URL → モバイル確認 → README 冒頭 → GitHub log → ADR）を意識した情報密度設計。**設計判断**で旧 #10 を分割（文書PR）した。
 
 ## 目的
-README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レポートを完成、ADR 3本で設計判断を文書化、品質証跡（スクショ7枚 + Lighthouse + axe）を整備。**冒頭3画面の情報密度を最優先する**前提で情報密度を最優先。
+README で「制約と判断」+「設計判断の根拠表」+ AI活用レポートを完成、ADR 3本で設計判断を文書化、品質証跡（スクショ7枚 + Lighthouse + axe）を整備。**冒頭3画面の情報密度を最優先する**前提で情報密度を最優先。
 
 ## 完了条件
 
@@ -36,7 +36,7 @@ README で「制約と判断」+ 「Backend から見た Next.js」+ AI活用レ
 
 ### ADR 3本（`docs/adr/`）
 - [ ] `0001-layered-architecture.md`:
-  - Status / Context / Decision / Consequences / **Alternatives considered** (フル DDD / Clean Architecture / Feature-based) / **Why not now** (各 Alternatives の却下理由) / **TypeScript type-only import 戦略追記**（Backend設計上の文脈、設計判断）
+  - Status / Context / Decision / Consequences / **Alternatives considered** (フル DDD / Clean Architecture / Feature-based) / **Why not now** (各 Alternatives の却下理由) / **TypeScript type-only import 戦略追記**
 - [ ] `0002-result-type.md`:
   - 同様 / **3層バリデーション責務分担追記**（Form=UX / UseCase=意味 / Domain=不変条件、設計判断）
 - [ ] `0003-server-component-strategy.md`:

@@ -21,7 +21,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
-      <SearchForm initialQuery={q ?? ""} />
+      {/* key で q 変更時に SearchForm を再マウントし、入力欄を URL に追随させる */}
+      <SearchForm key={q ?? ""} initialQuery={q ?? ""} />
       <Suspense fallback={<LoadingState />}>
         {q === undefined || q.trim().length === 0 ? (
           <EmptyState reason="initial" />

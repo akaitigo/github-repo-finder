@@ -14,6 +14,11 @@ import { Button } from "@/components/ui/button";
  * - encodeURIComponent で URL エンコード（`c++` → `c%2B%2B`）
  * - 空文字 / 空白のみは push しない（domain SearchQuery と整合）
  * - Server Action 不採用（ADR 0003: URL 共有可能性が本質的価値）
+ * - **URL 同期**: `initialQuery`（URL `?q=...` 由来）が変わったら入力欄も追随。
+ *   親（page.tsx）で `<SearchForm key={q} initialQuery={q} />` のように `key` を渡すと、
+ *   q 変更時に React がコンポーネントを再マウント、useState が再初期化される。
+ *   useEffect + setState は React 19 の `react-hooks/set-state-in-effect` で禁止のため、
+ *   `key` による再マウントが derived state の正規パターン。
  */
 export interface SearchFormProps {
   initialQuery?: string;

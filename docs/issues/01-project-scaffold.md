@@ -10,7 +10,7 @@
 - [ ] `package.json` の `engines` に `node >= 22`、`packageManager: pnpm@9.x.x` を明記
 - [ ] `.nvmrc` に `22`
 - [ ] `.gitignore` に `.env*.local`, `.vercel/`, `coverage/`, `playwright-report/`, `.DS_Store` を追加
-- [ ] `.env.example` を `GITHUB_TOKEN=ghp_xxx_optional` コメント付きで配置
+- [ ] `.env.example` を `GITHUB_TOKEN=` (任意、未設定でも動作) コメント付きで配置
 - [ ] **`LICENSE` ファイル (MIT) を配置** (リポジトリ作成時に手動)
 - [ ] `eslint.config.mjs` (flat config) を作成、`no-restricted-imports` で依存方向ルール、`no-restricted-syntax` で `dangerouslySetInnerHTML` 禁止
 - [ ] `prettier` 設定 (`.prettierrc.json`、`.prettierignore`)
