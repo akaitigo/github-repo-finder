@@ -8,7 +8,7 @@ README に書く 3 行サマリ・3 行表は、詳細ドキュメント (ADR / 
 |------------|--------|
 | 設計判断 3 行サマリ | `docs/adr/0001-layered-architecture.md` の Decision |
 | 「制約と判断」表の「やったこと / 意図的にやらなかったこと」 | `docs/adr/0001-0003.md` の Alternatives Considered |
-| AI 活用レポートの判断基準 | (内部メモ) |
+| AI 活用レポートの判断基準 | README の AI 活用レポートセクションに記載 |
 | アーキテクチャ Mermaid 図 | `eslint.config.mjs` の依存方向ルール |
 | テスト戦略 | `vitest.config.ts` の thresholds |
 

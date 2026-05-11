@@ -66,6 +66,31 @@ describe("RepositoryCard", () => {
     expect(link).toHaveAttribute("href", "/repositories/facebook/react");
   });
 
+  it("q を伝搬: 詳細リンクに ?q={q} を付ける (元クエリ保持)", () => {
+    render(
+      <RepositoryCard
+        repository={buildRepository({ fullName: "facebook/react" })}
+        q="react language:typescript"
+      />,
+    );
+    const link = screen.getByRole("link", { name: "facebook/react" });
+    expect(link).toHaveAttribute(
+      "href",
+      "/repositories/facebook/react?q=react%20language%3Atypescript",
+    );
+  });
+
+  it("q が空文字なら ?q= を付けない", () => {
+    render(
+      <RepositoryCard
+        repository={buildRepository({ fullName: "facebook/react" })}
+        q=""
+      />,
+    );
+    const link = screen.getByRole("link", { name: "facebook/react" });
+    expect(link).toHaveAttribute("href", "/repositories/facebook/react");
+  });
+
   it("a11y: 違反 0", async () => {
     const { container } = render(
       <RepositoryCard repository={buildRepository()} />,

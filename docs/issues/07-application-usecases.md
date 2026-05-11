@@ -90,7 +90,7 @@ export function mapGatewayError(error: GatewayError): ApplicationError {
 **`tests/helpers/test-doubles.ts`** に `FakeRepositoryGateway` クラス。UseCase テストで GatewayError 任意注入可能。
 
 ### 設計判断
-- UseCase はクラス（`constructor(gateway: RepositoryGateway)`）、Backend 出身者の DI 経験を活かす
+- UseCase はクラス（`constructor(gateway: RepositoryGateway)`）、constructor 注入で DI を表現
 - `SearchQuery.create(rawQuery)` を UseCase 内で呼び、`ValidationError` を `map-validation-error.ts` で変換
 - `gateway.search()` の `Result` を受けて `map-gateway-error.ts` で変換
 - 422 は `invalid-query` ではなく `upstream-error` に倒す（domain ValidationError 由来のみが `invalid-query`）

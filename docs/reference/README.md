@@ -13,7 +13,7 @@
 ### Next.js v16
 - [`nextjs-v16/searchparams.md`](nextjs-v16/searchparams.md) — async searchParams (v15+ Promise化)、PageProps ヘルパー、normalize seam
 - [`nextjs-v16/server-components.md`](nextjs-v16/server-components.md) — Server/Client境界、Composition Pattern、`server-only` パッケージ
-- [`nextjs-v16/error-handling.md`](nextjs-v16/error-handling.md) — error.tsx (Client必須/`unstable_retry`)、not-found.tsx、loading.tsx (Suspense)
+- [`nextjs-v16/error-handling.md`](nextjs-v16/error-handling.md) — error.tsx (Client必須/`reset`)、not-found.tsx、loading.tsx (Suspense)
 - [`nextjs-v16/caching.md`](nextjs-v16/caching.md) — fetch dedupe、React `cache()`、Cache Components / PPR (v16新概念)
 
 ### GitHub API
