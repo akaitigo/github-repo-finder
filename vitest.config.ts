@@ -28,6 +28,9 @@ export default defineConfig({
         "src/app/**/error.tsx",
         "src/app/**/not-found.tsx",
         "src/app/**/globals.css",
+        // Composition Root: factory 関数のみ、依存性配線、ロジックなし
+        // process.env.GITHUB_TOKEN 経由なので unit test 困難、E2E でカバー
+        "src/app/_lib/container.ts",
         // shadcn 生成物（自分で書いたコードではない）
         "src/components/ui/**",
         // テストファイル自体
@@ -68,6 +71,12 @@ export default defineConfig({
           branches: 60,
           statements: 60,
         },
+        "src/app/_lib/**/*.{ts,tsx}": {
+          lines: 90,
+          functions: 90,
+          branches: 90,
+          statements: 90,
+        },
       },
     },
     // Vitest projects: unit (node) / integration (jsdom) を分離
@@ -81,6 +90,7 @@ export default defineConfig({
             "src/application/**/*.test.ts",
             "src/infrastructure/**/*.test.ts",
             "src/lib/**/*.test.ts",
+            "src/app/_lib/**/*.test.ts",
           ],
           environment: "node",
         },
