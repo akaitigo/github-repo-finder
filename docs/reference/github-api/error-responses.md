@@ -40,7 +40,7 @@
 | **422 Unprocessable Entity** | クエリ構文エラー（256字超 / AND/OR/NOT 5個超 / スパム判定） | `http-error{status:422}` → `upstream-error{status:422}` |
 | **429 Too Many Requests** | rate limit | `rate-limited` または `secondary-rate-limited` |
 
-### 403 の3分類（最重要、Backend特徴の核）
+### 403 の3分類（最重要、外部 API 境界の堅牢性の核）
 
 | ヘッダ条件 | 判定 | UX |
 |-----------|------|-----|

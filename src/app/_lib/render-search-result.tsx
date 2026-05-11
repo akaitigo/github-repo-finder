@@ -30,6 +30,7 @@ export function renderSearchResult({
       <RepositoryList
         items={result.value.items}
         totalCount={result.value.totalCount}
+        q={q}
       />
     );
   }

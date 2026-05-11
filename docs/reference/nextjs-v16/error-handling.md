@@ -166,10 +166,10 @@ app/
 
 ## 落とし穴
 
-### 1. `reset()` を使い続ける罠
-- v3 PLAN や古い記事では `reset()`
-- v16.2+ では `unstable_retry()` 推奨
-- → 本プロジェクトでは **`unstable_retry()` を使う方がv16 ベストプラクティス準拠**
+### 1. `reset()` と `unstable_retry()` の選択
+- `reset()`: 安定 API、state クリアして再 render
+- `unstable_retry()` (v16.2+): `unstable_` 名前空間で互換性保証なし、再 fetch + 再 render
+- → 本プロジェクトでは **安定 API である `reset()` を採用**
 
 ### 2. error.tsx に `'use client'` 忘れ
 - ビルドエラー: 「Error components must be Client Components」
@@ -186,7 +186,7 @@ app/
 
 ### 5. error.tsx をテストする難しさ
 - Vitest で `<ErrorBoundary />` 単体は描画可能
-- ただし `unstable_retry` の挙動は実際の Next.js runtime に依存
+- ただし `reset` の挙動は実際の Next.js runtime に依存（React tree 再 render）
 - 推奨: `reset` の呼び出しを `vi.fn()` で監視 + axe で違反検証（snapshot 不要）
 
 ## テスト例
@@ -199,15 +199,15 @@ import { axe } from 'vitest-axe';
 import Error from './error';
 
 describe('error.tsx', () => {
-  it('calls unstable_retry on button click', async () => {
-    const retry = vi.fn();
-    render(<Error error={new Error('test')} unstable_retry={retry} />);
+  it('calls reset on button click', async () => {
+    const reset = vi.fn();
+    render(<Error error={new Error('test')} reset={reset} />);
     await userEvent.click(screen.getByRole('button', { name: /try again|再試行/i }));
-    expect(retry).toHaveBeenCalledOnce();
+    expect(reset).toHaveBeenCalledOnce();
   });
 
   it('has no a11y violations', async () => {
-    const { container } = render(<Error error={new Error('test')} unstable_retry={() => {}} />);
+    const { container } = render(<Error error={new Error('test')} reset={() => {}} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 });
@@ -218,12 +218,12 @@ describe('error.tsx', () => {
 | 質問 | 回答 |
 |------|------|
 | 「なぜ error.tsx は Client Component？」 | Error boundary は React のクラスコンポーネント機能、Server Component では使えない |
-| 「unstable_retry と reset の違い？」 | unstable_retry は再fetch + 再render、reset は state クリアのみ。v16.2+ では unstable_retry 推奨 |
+| 「unstable_retry と reset の違い？」 | `unstable_retry` (v16.2+ 追加) は再 fetch + 再 render、`reset` は state クリアして再 render。本プロジェクトでは安定 API である `reset` を採用 |
 | 「error.digest の用途は？」 | production で generic message を表示しつつ、サーバーログと照合するための hash |
 | 「snapshot ではなく reset() 動作確認した理由は？」 | snapshot は壊れやすく価値が低い、契約（reset 呼び出される）を検証する方が回帰検知に効く |
 
 ## 実装ファイル参照
-- `src/app/error.tsx` (Client、unstable_retry)
+- `src/app/error.tsx` (Client、reset)
 - `src/app/not-found.tsx` (Server)
 - `src/app/loading.tsx` (Server)
 - `tests/integration/app/error-boundary.test.tsx`

@@ -101,7 +101,7 @@ pnpm dev                     # http://localhost:3000
 |----|--------|------|
 | domain | 90% | search-query.ts / result.ts は 100%、型のみのファイル (validation-error / repository) は実行対象外 |
 | application | 80% | 84.6% (Stmts) |
-| infrastructure | 75% | 97.4% (Stmts) / 100% (Funcs) |
+| infrastructure | 75% | 97.89% (Stmts) / 100% (Funcs) |
 | presentation | 60% | 96.2% (Stmts) |
 | app/_lib | 90% | 93.1% (Stmts) |
 

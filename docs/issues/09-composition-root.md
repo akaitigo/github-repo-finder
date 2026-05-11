@@ -22,14 +22,14 @@ Next.js v16 App Router の app/ 配下を実装。`container.ts` factory で Use
 
 ### 規約ファイル
 - [ ] `src/app/loading.tsx` — Server Component、Suspense fallback
-- [ ] `src/app/error.tsx` — **Client Component（`'use client'` 必須）、`unstable_retry()` ボタン（v16.2.0+）、`error.digest` を console.error**
+- [ ] `src/app/error.tsx` — **Client Component（`'use client'` 必須）、安定 API の `reset()` ボタン、`error.digest` を console.error**
 - [ ] `src/app/not-found.tsx` — Server Component、トップへの Link
 - [ ] `src/app/layout.tsx` — `<html lang="ja">`、global CSS import
 
 ### 統合テスト
 - [ ] `tests/integration/app/render-search-result.test.tsx` — **8 kind 全部の UI 分岐を明示テスト**（各 kind ごと `it()` を1つずつ書く、`render` で実描画して assertion）。switch の `default` には `assertNever(error)` を置き、**型レベルで網羅性を保証**（kind 追加忘れ時にコンパイルエラー）。「明示テスト + assertNever」は競合せず両立する設計
 - [ ] `tests/integration/app/render-detail.test.tsx` — happy / not-found / rate-limit / forbidden / upstream-error テスト
-- [ ] `tests/integration/app/error-boundary.test.tsx` — `unstable_retry()` 実行確認 + axe 違反0
+- [ ] `tests/integration/app/error-boundary.test.tsx` — `reset()` 実行確認 + axe 違反0
 - [ ] `vitest.config.ts` の `coverage.exclude` に `src/app/**/page.tsx`, `src/app/**/layout.tsx` 追加
 - [ ] app/_lib カバレッジ 90%（CI 必須）/ 100%（努力目標）
 
@@ -49,7 +49,7 @@ Next.js v16 App Router の app/ 配下を実装。`container.ts` factory で Use
 ## 関連 reference
 - `reference/nextjs-v16/searchparams.md` (PageProps + async searchParams + normalize seam)
 - `reference/nextjs-v16/server-components.md` (Composition Pattern + token 保護)
-- `reference/nextjs-v16/error-handling.md` (error.tsx + unstable_retry + axe テスト)
+- `reference/nextjs-v16/error-handling.md` (error.tsx + reset + axe テスト)
 
 ## ラベル
 - `type:feat`, `layer:app-root`
@@ -73,7 +73,7 @@ export function normalizeSearchParam(
 
 ### 設計判断
 - `app/page.tsx` は `PageProps<'/'>` ヘルパー使用（v16新機能、import不要、Next.js v16 知識明示）
-- `error.tsx` は **必ず `'use client'`**、**`unstable_retry()` を使う**（v16.2.0+ 推奨、`reset()` の後継 → v16 ベストプラクティス準拠）
+- `error.tsx` は **必ず `'use client'`**、**安定 API である `reset()` を採用**（`unstable_retry()` は v16.2+ の選択肢として記載）
 - render-* helper は `import 'server-only'` を**付けない**（テストコスト>安全性、設計判断）
 - container.ts も `import 'server-only'` 付けない、token 保護は ESLint コードレビューで担保
 - **#8 で完成した UI コンポーネント**を render-* から呼び出すだけ、新規実装不要
@@ -86,7 +86,7 @@ export function normalizeSearchParam(
 このPRが merge された時点で CI が**初めて以下を機械検証**:
 - **app/_lib helper のロジック** が壊れたら CI で落ちる
 - **ApplicationError の各 kind 分岐** が UI に正しく繋がっているか CI で落ちる
-- **`error.tsx` の `unstable_retry` 動作** が壊れたら CI で落ちる
+- **`error.tsx` の `reset` 動作** が壊れたら CI で落ちる
 - **searchParams の正規化** が壊れたら CI で落ちる
 
 → App Router 全体が結合された状態、E2E と Vercel デプロイの準備完了

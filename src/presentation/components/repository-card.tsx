@@ -15,15 +15,19 @@ import {
  * - Server Component（'use client' なし）
  * - description / language が null でも安全に表示
  * - React の自動エスケープに任せる（`description` 内の HTML/script は安全に文字列化）
- * - リポジトリ詳細ページへの内部リンクは `/repositories/{owner}/{repo}` 形式
+ * - 詳細ページへの内部リンクは `/repositories/{owner}/{repo}?q={q}` 形式
+ *   q を伝搬することで、詳細→「検索に戻る」リンクで元クエリを復元できる
  */
 export interface RepositoryCardProps {
   repository: Repository;
+  q?: string;
 }
 
-export function RepositoryCard({ repository }: RepositoryCardProps) {
+export function RepositoryCard({ repository, q }: RepositoryCardProps) {
   const [owner, repo] = repository.fullName.split("/");
-  const detailHref = `/repositories/${owner}/${repo}`;
+  const queryString =
+    q !== undefined && q.length > 0 ? `?q=${encodeURIComponent(q)}` : "";
+  const detailHref = `/repositories/${owner}/${repo}${queryString}`;
 
   return (
     <Card data-testid="repository-card">

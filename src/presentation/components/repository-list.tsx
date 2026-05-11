@@ -9,13 +9,16 @@ import { EmptyState } from "./empty-state";
  * - Server Component
  * - items が空なら EmptyState (reason: "no-results") に切り替え
  * - role="list" / li を明示して a11y 担保（screen reader が「リスト」と認識）
+ * - 検索ワード q を RepositoryCard に伝搬し、詳細リンクに `?q=...` を付けて
+ *   詳細→「検索に戻る」で元クエリを復元できるようにする
  */
 export interface RepositoryListProps {
   items: readonly Repository[];
   totalCount: number;
+  q?: string;
 }
 
-export function RepositoryList({ items, totalCount }: RepositoryListProps) {
+export function RepositoryList({ items, totalCount, q }: RepositoryListProps) {
   if (items.length === 0) {
     return <EmptyState reason="no-results" />;
   }
@@ -31,7 +34,7 @@ export function RepositoryList({ items, totalCount }: RepositoryListProps) {
       <ul role="list" className="flex flex-col gap-3">
         {items.map((repo) => (
           <li key={repo.id}>
-            <RepositoryCard repository={repo} />
+            <RepositoryCard repository={repo} q={q} />
           </li>
         ))}
       </ul>
