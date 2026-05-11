@@ -18,6 +18,7 @@ import { renderSearchResult } from "./_lib/render-search-result";
 export default async function Home({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
   const q = normalizeSearchParam(sp.q);
+  const page = parsePage(normalizeSearchParam(sp.page));
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
@@ -27,15 +28,28 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         {q === undefined || q.trim().length === 0 ? (
           <EmptyState reason="initial" />
         ) : (
-          await renderSearch(q)
+          await renderSearch(q, page)
         )}
       </Suspense>
     </div>
   );
 }
 
-async function renderSearch(q: string): Promise<React.ReactElement> {
+/**
+ * URL の `?page=N` を 1 以上の整数に正規化。不正値は 1 にフォールバック。
+ */
+function parsePage(raw: string | undefined): number {
+  if (raw === undefined) return 1;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.trunc(n);
+}
+
+async function renderSearch(
+  q: string,
+  page: number,
+): Promise<React.ReactElement> {
   const useCase = createSearchUseCase();
-  const result = await useCase.execute(q);
-  return renderSearchResult({ result, q });
+  const result = await useCase.execute(q, { page });
+  return renderSearchResult({ result, q, currentPage: page });
 }

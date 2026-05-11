@@ -107,6 +107,25 @@ render-search-result.tsx → UI コンポーネント (Server)
 
 **採用案**: Server Component で fetch、URL 同期。token は Server boundary に閉じる。
 
+## 「却下した 2 件目」: 無限スクロール
+
+**選択肢**: ページネーション (`?page=N`) vs 無限スクロール (Intersection Observer + 連続 fetch)
+
+**ページネーション採用、無限スクロール却下の理由 (4 軸)**:
+
+| # | 観点 | ページネーション | 無限スクロール |
+|---|------|---------------|--------------|
+| 1 | **URL 同期** | `?q=react&page=2` で deep link 共有可能 | スクロール状態を URL に乗せられず deep link 不可 |
+| 2 | **rate-limit 相性** | クリック間で間欠 fetch、API 制約 (Search 10 req/min 未認証) と適合 | スクロールで自動連続 fetch → 数秒で 10 req 枯渇、エラー画面連発 |
+| 3 | **Server Component 主体** | `<Link>` のみで Server Component に閉じる | Intersection Observer + Client 化必須、設計と矛盾 |
+| 4 | **a11y 違反 0 維持** | `<nav aria-label="...">` + `<Link>` で標準対応 | スクリーンリーダーが「リスト終わり」検知困難、a11y 違反リスク |
+
+**実装**: `src/presentation/components/pagination-controls.tsx` (Server Component、URL `?q=&page=N` 同期、GitHub Search API 制約に合わせて最大 34 ページで clamp)
+
+**面接想定 Q&A**:
+- Q: なぜ無限スクロールにしなかった？
+- A: 4 軸 (URL 共有性 / rate-limit / Server Component 主体 / a11y) で機能的に劣るため。本プロジェクトの設計思想 (URL 同期 + Server 主体) と整合させた。
+
 ## 参考
 
 - 実装: `src/app/page.tsx`, `src/app/_lib/container.ts`, `src/presentation/components/search-form.tsx`

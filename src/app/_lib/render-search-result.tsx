@@ -6,6 +6,7 @@ import { RepositoryList } from "@/presentation/components/repository-list";
 import { EmptyState } from "@/presentation/components/empty-state";
 import { RateLimitDisplay } from "@/presentation/components/rate-limit-display";
 import { ErrorState } from "@/presentation/components/error-state";
+import { PaginationControls } from "@/presentation/components/pagination-controls";
 
 /**
  * SearchUseCase の Result を React Element に変換する純粋関数。
@@ -15,23 +16,33 @@ import { ErrorState } from "@/presentation/components/error-state";
  *   分岐ロジックを本 helper に抽出して個別テスト（render-search-result.test.tsx で 8 kind 全パス）
  * - assertNever で ApplicationError 8 kind の網羅性をコンパイル時保証
  * - q (検索ワード) を必要な分岐 (rate-limit / error-state) に渡し、Retry リンクを生成
+ * - currentPage はページネーション表示に使う (1 ベース、URL `?page=N` 由来)
  */
 export interface RenderSearchResultProps {
   result: Result<SearchResult, ApplicationError>;
   q: string;
+  currentPage?: number;
 }
 
 export function renderSearchResult({
   result,
   q,
+  currentPage = 1,
 }: RenderSearchResultProps): React.ReactElement {
   if (result.ok) {
     return (
-      <RepositoryList
-        items={result.value.items}
-        totalCount={result.value.totalCount}
-        q={q}
-      />
+      <>
+        <RepositoryList
+          items={result.value.items}
+          totalCount={result.value.totalCount}
+          q={q}
+        />
+        <PaginationControls
+          q={q}
+          currentPage={currentPage}
+          totalCount={result.value.totalCount}
+        />
+      </>
     );
   }
 

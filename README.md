@@ -86,6 +86,7 @@ pnpm dev                     # http://localhost:3000
 | infrastructure 層に 14+ 異常系テスト (rate-limit 3 分類 / 5xx / JSON 破損 / schema drift / null / URL エンコード) | フル DDD (集約ルート / Repository / DomainService、課題規模に対して overkill) | (2) ISR キャッシュ / 実 API スモークテスト |
 | rate-limit UX (Search bucket = 10 req/min 未認証 を理解した上で 3 分類して誘導) | Server Action (検索は read-only + URL 共有可能性が本質、ADR 0003 で詳細) | (3) axe + Lighthouse の CI 統合 |
 | ESLint レイヤー強制 + `assertNever` 網羅性保証 + zod schema drift 検知 | 全コンポーネント包括テスト (重要部品 = 結合テスト + a11y 違反 0 検証に絞る) | (4) ダークモード / PPR / Suspense streaming |
+| **ページネーション (Server Component、URL `?page=N` 同期)** | **無限スクロール採用** ([ADR 0003](docs/adr/0003-server-component-strategy.md) で 4 軸却下: URL 同期 / rate-limit / Server Component 主体 / a11y) | (5) ページサイズ切替 (per_page 選択 UI) |
 
 ## テスト戦略
 
