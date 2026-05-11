@@ -37,11 +37,13 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Build を先に走らせて Next.js v16 の PageProps<...> 型を `.next/types/` に生成
+      # (typecheck がこの型に依存するため順序固定)
+      - name: Build
+        run: pnpm build
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Test (with coverage thresholds)
         run: pnpm test:coverage
-
-      - name: Build
-        run: pnpm build
