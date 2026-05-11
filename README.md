@@ -5,7 +5,7 @@
 ![pnpm](https://img.shields.io/badge/pnpm-10.33.0-orange)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-GitHub のリポジトリを検索する Web アプリケーション。Next.js v16 + App Router で実装、軽量レイヤード4層 + Composition Root を採用、infrastructure 層に 14 種類の異常系テストを実装して外部 API 境界の堅牢性を担保。
+GitHub のリポジトリを検索する Web アプリケーション。Next.js v16 + App Router で実装、軽量レイヤード4層 + Composition Root を採用、infrastructure 層に rate-limit 3 分類・schema drift 検知などの異常系テストを 40+ ケース実装して外部 API 境界の堅牢性を担保。
 
 ![トップ画面](docs/screenshots/01-top-pc.png)
 
@@ -30,7 +30,8 @@ pnpm dev                     # http://localhost:3000
 - リポジトリ名 / 言語 / qualifier (`language:typescript`, `stars:>1000`) で GitHub Search API を叩く
 - 結果一覧で full_name / 説明 / 言語 / Star / Fork / Open Issue 数を表示
 - 1 件クリックで詳細ページ (`/repositories/[owner]/[repo]`) に遷移、avatar + Star / Watcher / Fork / Issue の 4 count を表示
-- URL 同期戦略 (`?q=react`) なので **検索結果の URL を共有可能** (deep link)
+- URL 同期戦略 (`?q=react&page=2`) なので **検索結果の URL を共有可能** (deep link)
+- ページネーション (Server Component、最大 34 ページ / GitHub Search API の 1000 件制約に対応)
 
 ## アーキテクチャ
 
@@ -133,9 +134,9 @@ pnpm dev                     # http://localhost:3000
 - **修正**: 動くが「なぜ動くか」を自分が言語化できない箇所は書き換え
 - **却下**: token 漏洩リスク / 設計思想と矛盾 / 説明できない
 
-### 却下した 1 件 (before / after)
+### 却下した 2 件 (before / after)
 
-**AI 提案 (却下)**: Client Component 内で `useEffect` + `fetch('/api/search?q=...')` パターン
+**1 件目: AI 提案 (却下)** — Client Component 内で `useEffect` + `fetch('/api/search?q=...')` パターン
 
 ```typescript
 // ❌ Before (AI 提案、却下)
@@ -164,7 +165,17 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
 }
 ```
 
-詳細: [ADR 0003 「却下した 1 件の事例」](docs/adr/0003-server-component-strategy.md)
+**2 件目: 無限スクロール (却下)** — Intersection Observer + 連続 fetch でリストを継ぎ足すパターン
+
+**却下理由 (4 軸)**:
+1. **URL 同期戦略との矛盾**: スクロール状態を URL に乗せられず、`?page=2` のような deep link が不可
+2. **rate-limit リスク**: Search API は未認証 10 req/min。自動連続 fetch で数秒で枯渇 → エラー画面連発
+3. **Server Component 主体の崩壊**: Intersection Observer は Client Component 必須、設計と矛盾
+4. **a11y 違反リスク**: スクリーンリーダーが「リストの終わり」を検知困難、`a11y 違反 0` の方針と相容れない
+
+**採用案**: Server Component + URL `?q={q}&page={n}` 同期のページネーション ([`src/presentation/components/pagination-controls.tsx`](src/presentation/components/pagination-controls.tsx))
+
+詳細: [ADR 0003 「却下した 1 件 / 2 件目」](docs/adr/0003-server-component-strategy.md)
 
 ## 学習過程
 
