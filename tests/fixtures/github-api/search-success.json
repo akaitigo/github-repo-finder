@@ -1,0 +1,46 @@
+{
+  "total_count": 2,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 10270250,
+      "node_id": "MDEwOlJlcG9zaXRvcnkxMDI3MDI1MA==",
+      "name": "react",
+      "full_name": "facebook/react",
+      "owner": {
+        "login": "facebook",
+        "avatar_url": "https://avatars.githubusercontent.com/u/69631?v=4"
+      },
+      "description": "The library for web and native user interfaces.",
+      "language": "JavaScript",
+      "stargazers_count": 232000,
+      "watchers_count": 6700,
+      "forks_count": 47500,
+      "open_issues_count": 870,
+      "html_url": "https://github.com/facebook/react",
+      "updated_at": "2026-05-10T12:34:56Z",
+      "created_at": "2013-05-24T16:15:54Z",
+      "pushed_at": "2026-05-10T12:00:00Z"
+    },
+    {
+      "id": 70107786,
+      "node_id": "MDEwOlJlcG9zaXRvcnk3MDEwNzc4Ng==",
+      "name": "next.js",
+      "full_name": "vercel/next.js",
+      "owner": {
+        "login": "vercel",
+        "avatar_url": "https://avatars.githubusercontent.com/u/14985020?v=4"
+      },
+      "description": "The React Framework",
+      "language": "TypeScript",
+      "stargazers_count": 130000,
+      "watchers_count": 1500,
+      "forks_count": 28000,
+      "open_issues_count": 2700,
+      "html_url": "https://github.com/vercel/next.js",
+      "updated_at": "2026-05-11T01:23:45Z",
+      "created_at": "2016-10-05T22:46:09Z",
+      "pushed_at": "2026-05-11T01:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": 10270250,
+  "node_id": "MDEwOlJlcG9zaXRvcnkxMDI3MDI1MA==",
+  "name": "react",
+  "full_name": "facebook/react",
+  "owner": {
+    "login": "facebook",
+    "avatar_url": "https://avatars.githubusercontent.com/u/69631?v=4"
+  },
+  "description": null,
+  "language": null,
+  "stargazers_count": 232000,
+  "watchers_count": 6700,
+  "forks_count": 47500,
+  "open_issues_count": 870,
+  "html_url": "https://github.com/facebook/react",
+  "updated_at": "2026-05-10T12:34:56Z",
+  "created_at": "2013-05-24T16:15:54Z",
+  "pushed_at": "2026-05-10T12:00:00Z"
+}
